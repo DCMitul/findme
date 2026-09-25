@@ -226,3 +226,8 @@ __marimo__/
 *.tmp
 *.temp
 *.log
+
+
+# User data files
+*.json
+*.db
