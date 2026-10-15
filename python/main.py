@@ -61,7 +61,17 @@ def inidb():
     return True
 
 
-# The function that manages writing stuff to the db
+# The functions that manage writing stuff to the db
+# The function that writes to the data table
+def writetodata(loc,terms):
+    conn = sqlite3.connect(hconfig("read",'db'))
+    cursor = conn.cursor()
+    cursor.execute("""
+    INSERT INTO data (path, terms) VALUES(?, ?)
+    """, (loc, terms))
+
+    conn.commit()
+    conn.close()
 
 
 # The two functions that make it easier to get input or confirm smth
@@ -80,6 +90,7 @@ def inquirinp(message,defau):
 
 # The functions that manage getting terms from specific file types
 def txt(fl):
+    tmp = []
     with open(fl, 'r') as file:
         for line in file:
             result = line.strip()
@@ -106,8 +117,10 @@ def txt(fl):
             # print(result)
             result = [x for x in result if x != " "]
             result = [x for x in result if x != ""]
-            print(result)
-    pass
+            # print(result)
+            tmp += result
+    return(tmp)
+
 
 def md(fl):
     pass
@@ -161,7 +174,7 @@ def getfiles(dir):
 def getterms(file):
     tmpe = pth.Path(file).suffix.lower()
     if tmpe == ".txt":
-        txt(file)
+        return(txt(file))
     elif tmpe == ".md":
         md(file)
 
@@ -177,7 +190,9 @@ def makerow():
 
     for file in files:
         terms = getterms(file)
-        pass
+        terms = json.dumps(terms)
+        # print(terms)
+        writetodata(file,terms)
 
 
 
@@ -189,8 +204,7 @@ CONFIGPATH = FINDME / "config.json"
 
 
 inidb()
-a = json.dumps(makerow())
-print(a)
+makerow()
 
 
 
