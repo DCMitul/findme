@@ -112,7 +112,16 @@ def txt(fl):
             result = result.replace("{",".")
             result = result.replace("}",".")
             result = result.replace('"',".")
-            # result = result.replace(",",".")
+            result = result.replace(')',".")
+            result = result.replace('(',".")
+            result = result.replace('^',".")
+            result = result.replace('!',".")
+            result = result.replace('`',".")
+            # result = result.replace('',".")
+            # result = result.replace('',".")
+            # result = result.replace('',".")
+            # result = result.replace('',".")
+            # result = result.replace('',".")
             result = result.split('.')
             # print(result)
             result = [x for x in result if x != " "]
@@ -190,6 +199,7 @@ def makerow():
 
     for file in files:
         terms = getterms(file)
+        terms = list(set(terms))
         terms = json.dumps(terms)
         # print(terms)
         writetodata(file,terms)
