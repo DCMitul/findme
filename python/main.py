@@ -47,6 +47,7 @@ def hconfig(action,key,value=None):
 def inidb():
     conn = sqlite3.connect(hconfig('read','db'))
     cursor = conn.cursor()
+    # The path column has the path of the files and the terms column contains every word in that file
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS data (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -75,6 +76,41 @@ def inquirinp(message,defau):
         message=message,
         default=defau
     ).execute()
+
+
+# The functions that manage getting terms from specific file types
+def txt(fl):
+    with open(fl, 'r') as file:
+        for line in file:
+            result = line.strip()
+            result = result.replace(",",".")
+            result = result.replace(" ",".")
+            result = result.replace("/",".")
+            result = result.replace(";",".")
+            result = result.replace("'",".")
+            result = result.replace("]",".")
+            result = result.replace("[",".")
+            result = result.replace("*",".")
+            result = result.replace("+",".")
+            result = result.replace("\\",".")
+            result = result.replace("<",".")
+            result = result.replace(">",".")
+            result = result.replace("?",".")
+            result = result.replace(":",".")
+            result = result.replace("|",".")
+            result = result.replace("{",".")
+            result = result.replace("}",".")
+            result = result.replace('"',".")
+            # result = result.replace(",",".")
+            result = result.split('.')
+            # print(result)
+            result = [x for x in result if x != " "]
+            result = [x for x in result if x != ""]
+            print(result)
+    pass
+
+def md(fl):
+    pass
 
 
 # The function that gets the folder's that are to be indexed
@@ -121,15 +157,27 @@ def getfiles(dir):
     return temp
 
 
-# The function that handles getting and indexing the directories
-def index():
+# The function that returns all the terms from the given file
+def getterms(file):
+    tmpe = pth.Path(file).suffix.lower()
+    if tmpe == ".txt":
+        txt(file)
+    elif tmpe == ".md":
+        md(file)
+
+
+
+# The function that handles making the row and sending it to the function that adds stuff to the db
+def makerow():
     files = []
     dirs = getdir()
-    print("The given directories will now be indexed. There might be a spike in memory usage.")
+    print("The given directories will now be indexed. There might be a spike in memory and cpu usage.")
     for a in dirs:
         files += getfiles(a)
 
-    print(files)
+    for file in files:
+        terms = getterms(file)
+        pass
 
 
 
@@ -141,6 +189,8 @@ CONFIGPATH = FINDME / "config.json"
 
 
 inidb()
-index()
+a = json.dumps(makerow())
+print(a)
+
 
 
