@@ -16,6 +16,7 @@ except ImportError:
 def inicnf():
     if not os.path.exists(CONFIGPATH):
         temp = {
+            "first": True,
             "db": str(FINDME / "data.db"),
         }
 
@@ -74,6 +75,21 @@ def writetodata(loc,terms):
     conn.close()
 
 
+def checkdata(loc):
+    conn = sqlite3.connect(hconfig("read","db"))
+    cursor = conn.cursor()
+    cursor.execute("""
+    SELECT * FROM data WHERE path = ?
+    """, (loc,))
+    temp = cursor.fetchone()
+    if temp == None:
+        return True
+    else:
+        cursor.execute(
+            "DELETE FROM data WHERE path = ?", (loc,)
+        )
+        return True
+
 # The two functions that make it easier to get input or confirm smth
 def inquircnfrm(message,defau):
     return inquirer.confirm(
@@ -86,6 +102,17 @@ def inquirinp(message,defau):
         message=message,
         default=defau
     ).execute()
+
+
+# The function that manages doing the first time setup
+def first():
+    if hconfig("read",'first') == True:
+        print("As this is your first time running the program you need to enter some information first.")
+        makerow()
+        hconfig("change",'first',False)
+        print("Done! You can now continue to the program.")
+    else:
+        return None
 
 
 # The functions that manage getting terms from specific file types
@@ -138,11 +165,15 @@ def md(fl):
 # The function that gets the folder's that are to be indexed
 def getdir():
     tmp = []
-    print("Please enter the directories of the folders that would need to be scanned. Type 'done' when finished.")
+    print("Please enter the directories of the folders that would need to be indexed. Type 'done' when finished.")
     while True:
         temp = inquirinp(">>",'')
         if temp.lower() == 'done':
-            break
+            if tmp == []:
+                print("There needs to be a minimum of at least one directory to be indexed.")
+                continue
+            else:
+                break
         elif pth.Path(temp).exists() and pth.Path(temp).is_dir():
             if temp in tmp:
                 print("This directory is already recorded.")
@@ -202,8 +233,29 @@ def makerow():
         terms = list(set(terms))
         terms = json.dumps(terms)
         # print(terms)
+        checkdata(file)
         writetodata(file,terms)
 
+
+# The function that manages the main menu
+def mmenu():
+    act = inquirer.select(
+        message="Main Menu",
+        choices=[        
+        {"name": "Search", "value": "find"},
+        {"name": "Index directories", "value": "ind"},
+        # {"name": "", "value": ""},
+        {"name": "Exit", "value": "exit"}]
+    ).execute()
+
+    if act == "exit":
+        print("Exiting...")
+        sys.exit()
+    elif act == "ind":
+        makerow()
+        mmenu()
+    else:
+        mmenu()
 
 
 
@@ -213,8 +265,10 @@ FINDME = pth.Path(__file__).resolve().parent.resolve().parent
 CONFIGPATH = FINDME / "config.json"
 
 
-inidb()
-makerow()
 
+inidb()
+# makerow()
+first()
+mmenu()
 
 
